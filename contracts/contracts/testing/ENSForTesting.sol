@@ -5,15 +5,18 @@ pragma solidity ^0.8.9;
 // Registry
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract FakeENS is ENS {
-
+contract ENSForTesting is ENS, Ownable {
+    mapping(bytes32 => address) public nodeToOwner;
     function setRecord(
         bytes32 node,
         address owner,
         address resolver,
         uint64 ttl
-    ) external {}
+    ) external {
+        revert("Not implemented");
+    }
 
     function setSubnodeRecord(
         bytes32 node,
@@ -21,32 +24,44 @@ contract FakeENS is ENS {
         address owner,
         address resolver,
         uint64 ttl
-    ) external {}
+    ) external {
+        revert("Not implemented");
+    }
 
     function setSubnodeOwner(
         bytes32 node,
         bytes32 label,
         address owner
-    ) external returns (bytes32) {}
+    ) external returns (bytes32) {
+        revert("Not implemented");
+    }
 
-    function setResolver(bytes32 node, address resolver) external {}
+    function setResolver(bytes32 node, address resolver) external {
+        revert("Not implemented");
+    }
 
-    function setOwner(bytes32 node, address owner) external {}
+    function setOwner(bytes32 node, address ensNodeOwner) external onlyOwner {
+        nodeToOwner[node] = ensNodeOwner;
+    }
 
-    function setTTL(bytes32 node, uint64 ttl) external {}
+    function setTTL(bytes32 node, uint64 ttl) external {
+        revert("Not implemented");
+    }
 
-    function setApprovalForAll(address operator, bool approved) external {}
+    function setApprovalForAll(address operator, bool approved) external {
+        revert("Not implemented");
+    }
 
     function owner(bytes32 node) external view returns (address) {
-        return 0x0000000000000000000000000000000000000000;
+        return nodeToOwner[node];
     }
 
     function resolver(bytes32 node) external view returns (address) {
-        return 0x0000000000000000000000000000000000000000;
+        revert("Not implemented");
     }
 
     function ttl(bytes32 node) external view returns (uint64) {
-        return 0xffffffffffffffff;
+        revert("Not implemented");
     }
 
     function recordExists(bytes32 node) external view returns (bool) {
