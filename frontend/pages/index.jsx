@@ -1,11 +1,16 @@
-import Head from 'next/head'
-import { ConnectWallet } from "@thirdweb-dev/react";
+import {ConnectWallet} from "@thirdweb-dev/react";
+
+import styles from "../styles/Home.module.css";
 
 export default function Home() {
-  return <>
-    <Head>
-       <meta name="viewport" content="width=device-width, initial-scale=1" />
-    </Head>
-    <ConnectWallet />
-  </>
+    return (
+        <div className="d-flex flex-column h-100">
+            <div className="flex-shrink-0">
+                <div className="container">
+                    <h1 className="mt-5">ETHSF</h1>
+                    <ConnectWallet/>
+                </div>
+            </div>
+        </div>
+    );
 }
