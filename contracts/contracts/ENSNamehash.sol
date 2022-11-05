@@ -1,6 +1,8 @@
 // Original from https://github.com/JonahGroendal/ens-namehash/blob/master/contracts/ENSNamehash.sol
 // Licensed under MIT License, https://github.com/JonahGroendal/ens-namehash/blob/master/LICENSE
 // Modified by @xinbenlv
+// ALL CODE HERE IS FOR A HACKATHON AND IS NOT MEANT TO BE USED IN PRODUCTION
+
 pragma solidity ^0.8.17;
 
 /*

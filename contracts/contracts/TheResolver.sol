@@ -1,10 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
+// ALL CODE HERE IS FOR A HACKATHON AND IS NOT MEANT TO BE USED IN PRODUCTION
+
 pragma solidity ^0.8.9;
 // Registry
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import "@ensdomains/ens-contracts/contracts/resolvers/PublicResolver.sol";
 import "@ensdomains/ens-contracts/contracts/resolvers/Resolver.sol";
-import './ENSNamehash.sol';
+import "./ENSNamehash.sol";
 
 contract TheResolver {
     // Same address for Mainet, Ropsten, Rinkerby, Gorli and other networks;
