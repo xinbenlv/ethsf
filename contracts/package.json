@@ -5,6 +5,7 @@
   "license": "MIT",
   "author": "Zainan Victor Zhou",
   "devDependencies": {
+    "@ensdomains/ens-contracts": "^0.0.15",
     "@ethersproject/abi": "^5.4.7",
     "@ethersproject/providers": "^5.4.7",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
