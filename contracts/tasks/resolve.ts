@@ -17,9 +17,10 @@ task("resolve", "Mints tokens to an address")
     console.log(`-------------`);
     const signer = (await ethers.getSigners())[parseInt(taskArguments.signerIndex)] as SignerWithAddress;
     let contract = await ethers.getContractAt("TheResolver", taskArguments.point);
-    const bytes = ethers.utils.namehash(taskArguments.ens);
-
-    console.log(`Bytes =`, bytes);
-    let result = await contract.connect(signer).resolve(bytes);
+    const jsNamehash = ethers.utils.namehash(taskArguments.ens);
+    const solNamehash = await contract.computeNamehash(taskArguments.ens);
+    console.log(`jsNamehash =`, jsNamehash);
+    console.log(`solNamehash =`, solNamehash);
+    let result = await contract.connect(signer).resolveFromName(taskArguments.ens);
     console.log(`result: ${result}`);
   });
