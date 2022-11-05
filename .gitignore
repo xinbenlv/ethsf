@@ -106,3 +106,14 @@ dist
 # Python
 .idea
 .python-version
+
+# Circuit stuff
+*.ptau
+*.r1cs
+*.zkey
+*.wtns
+*_proof.json
+*_public.json
+hash_input.json
+*_vkey.json
+*_calldata.dat
