@@ -5,6 +5,8 @@ import {HardhatUserConfig} from 'hardhat/config';
 import * as dotenv from 'dotenv';
 import "@nomiclabs/hardhat-ethers";
 
+import "./tasks/resolve";
+
 dotenv.config();
 
 const config: HardhatUserConfig = {
