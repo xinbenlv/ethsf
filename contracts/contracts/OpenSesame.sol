@@ -1,10 +1,16 @@
 pragma solidity ^0.8.9;
 
 import "../circuits/mimcsponge.sol";
-import "hardhat/console.sol";
+
+import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
+import "./ENSNamehash.sol";
 
 contract OpenSesame is PlonkVerifier {
+    address constant DEFAULT_GLOBAL_ENS = 0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e;
+    address private ensAddress = DEFAULT_GLOBAL_ENS;
     mapping(address=> uint256) playerIds;
+    mapping(address=> bool) guruMap;
+    mapping(address=> bool) ensClaimedMap;
     uint256 playerCount = 0;
     uint256 playerIdBase = 1;
 
@@ -20,33 +26,34 @@ contract OpenSesame is PlonkVerifier {
     function getPlayerId(address player) public view returns (uint256) {
         return playerIds[player];
     }
+    function claimTreasury(address _to) public {
+        require(guruMap[msg.sender], "Only gurus can claim the treasury");
+        payable(_to).transfer(address(this).balance);
+    }
 
-    function claimWithProof(address _to, bytes memory _proof, uint[] calldata _otherPubSignals) public {
+    // XXX untested
+    // Prerequisite: set controller of `ethguru.eth` to this controller
+    // 
+    function claimENS(address _to, string memory _ensName) public {
+        require(guruMap[msg.sender], "Only gurus can claim the treasury");
+        require(!ensClaimedMap[_to], "ENS already claimed");
+        ensClaimedMap[_to] = true;
+        ENS ens = ENS(ensAddress);
+        // ens.setSubnodeOwner(ens.rootNode(), keccak256(abi.encodePacked(_ensName)), _to);
+    }
+
+    function guruProof(address _to, bytes memory _proof, uint[] calldata _otherPubSignals) public {
+        require(guruMap[msg.sender] == false, "You are already a guru, you can't claim");
         uint[] memory pubSignals = new uint[](_otherPubSignals.length + 1);
-
-        console.log("msg.sender = %s", msg.sender);
         uint playerId = getPlayerId(msg.sender);
-        console.log("playerId = %s", playerId);
         pubSignals[0] = playerId;
 
         // TODO optimize for gas
         for (uint256 i = 0; i < _otherPubSignals.length; i++) {
             pubSignals[i+1] = _otherPubSignals[i];
         }
-        console.log("PlayerId = %s", playerId);
-        console.log("pubSignals[0] = %s", pubSignals[0]);
-        console.log("pubSignals[1] = %s", pubSignals[1]);
-        console.log("pubSignals[2] = %s", pubSignals[2]);
-        console.log("pubSignals[3] = %s", pubSignals[3]);
 
         require(this.verifyProof(_proof, pubSignals), "Proof verification failed");
-        _sendEthViaCall(payable(_to));
-    }
-
-    function _sendEthViaCall(address payable _to) internal {
-        // Call returns a boolean value indicating success or failure.
-        // This is the current recommended method to use.
-        (bool sent, bytes memory data) = _to.call{value: address(this).balance }("");
-        require(sent, "Failed to send Ether");
+        guruMap[msg.sender] = true;
     }
 }
