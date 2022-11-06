@@ -106,6 +106,8 @@ dist
 # Python
 .idea
 .python-version
+db.sqlite3
+__pycache__
 
 # Circuit stuff
 *.ptau
