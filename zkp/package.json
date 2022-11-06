@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "expressjs": "^1.0.1",
     "fs": "^0.0.1-security",
     "snarkjs": "^0.5.0"
   }

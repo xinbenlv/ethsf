@@ -85,10 +85,12 @@
         "function mint(address to, uint256 tokenId) public",
         "function safeMint(address to, uint256 tokenId, bytes calldata data) public"
     ];
-    const erc721ForTestingAddress = "0xe020fEeA2bC5849B6A3eE445Feab7723B81F7E79";
+    const erc721ForTestingAddress = "0xf23D13244e028F96336d8B8774debE70CE72025E";
+    // DEMO CHANGE YYY if changed ENS server
     const openSesameAddress = "0x40De1ff057456fcc8b28B8B353b323C9A88d473D"
+
     const ensTrustAddress = "0xC5f589BbA3634083C3D7e1b782c61131C43Ff2d5";
-    const tokenIdToDrop = 4;
+    const tokenIdToDrop = 1; // DEMO CHANGE YYY
     const { createApp } = Vue;
             createApp({
                 mounted() {
@@ -98,8 +100,8 @@
                     return {
                         currentAccount: null,
                         chainId: null,
-                        ensToClaim: "bob",
-                        ensDomain: "xinbenlvethsf.eth",
+                        ensToClaim: "alice", // DEMO CHANGE YYY
+                        ensDomain: "ethguru.eth",
                         nft: tokenIdToDrop
                     }
                 },

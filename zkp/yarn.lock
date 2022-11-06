@@ -119,6 +119,11 @@ ejs@^3.1.6:
   dependencies:
     jake "^10.8.5"
 
+expressjs@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/expressjs/-/expressjs-1.0.1.tgz#220328469a18df5ad615e2b7a0ce995f17fbaeef"
+  integrity sha512-eFnQ5bMJxTZ29XwRJPV8ee/OURBBMS6Fm+b5rvMMEyz6u2IxPEh2SRzMZt9WvgnV+SMLmnzkALE1DnGG1HxJCw==
+
 fastfile@0.0.20:
   version "0.0.20"
   resolved "https://registry.yarnpkg.com/fastfile/-/fastfile-0.0.20.tgz#794a143d58cfda2e24c298e5ef619c748c8a1879"

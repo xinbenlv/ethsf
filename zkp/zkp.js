@@ -27,7 +27,7 @@ function calulateWitness(potentialSolution, userId) {
     });
 }
 
-async function computeProof(solution, playerId) {
+const computeProof = async function (solution, playerId) {
     await calulateWitness(solution, playerId);
     var data = await plonk.prove(ZKEY_PATH, WTNS_PATH)
     return plonk.exportSolidityCallData(data.proof, data.publicSignals);
@@ -38,12 +38,16 @@ let main = async (solution, userId) => {
     console.log(data);
 }
 
-// node zkp.js 18 2
-if (process.argv.length != 4) {
-    console.log("Usage: node zkp.js <puzzle-solution> <user-id>");
-    process.exit(1);
-} else {
-    main(process.argv[2], process.argv[3]).then(() => {
-        process.exit(0);
-    });
+// // node zkp.js 18 2
+// if (process.argv.length != 4) {
+//     console.log("Usage: node zkp.js <puzzle-solution> <user-id>");
+//     process.exit(1);
+// } else {
+//     main(process.argv[2], process.argv[3]).then(() => {
+//         process.exit(0);
+//     });
+// }
+
+module.exports = {
+    computeProof
 }
