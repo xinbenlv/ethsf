@@ -24,6 +24,8 @@ contract FirstENSBankAndTrust is IERC721Receiver, Ownable {
     mapping(bytes32/*hash of TokenHolding*/ => bytes32/*node of owner*/) public erc721TokenToNodeMap;
     mapping(bytes32/*hash of TokenHolding*/ => mapping(bytes32/*node of owner*/=> uint256)) public erc721NodeToHoldingIndex;
 
+    event AddedToHolding(bytes32 indexed ensNode, address indexed operator, uint256 indexed tokenId);
+    event RemovedFromHolding(bytes32 indexed ensNode, address indexed operator, uint256 indexed tokenId);
     function getENS() public view returns (ENS) {
         return ENS(ensAddress);
     }
@@ -36,7 +38,7 @@ contract FirstENSBankAndTrust is IERC721Receiver, Ownable {
     // @param data MUST BE the ENS node of the intended token receiver this ENSHoldingServiceForNFT is holding on behalf of.
     function onERC721Received(
         address operator,
-        address /*from*/,
+        address from,
         uint256 tokenId,
         bytes calldata data
     ) external override returns (bytes4) {
@@ -49,11 +51,12 @@ contract FirstENSBankAndTrust is IERC721Receiver, Ownable {
         bytes32 ensNode = bytes32(data[0:32]);
         // --- END OF WARNING ---
 
-        addToHolding(ensNode, operator, tokenId);
+        addToHolding(ensNode, msg.sender, tokenId);
         return ERC721_RECEIVER_MAGICWORD;
     }
 
     function addToHolding(bytes32 ensNode, address operator, uint256 tokenId) internal {
+        emit AddedToHolding(ensNode, operator, tokenId);
         bytes32 tokenHash = keccak256(abi.encodePacked(operator, tokenId));
         erc721NodeToHoldingIndex[ensNode][tokenHash] = erc721NodeToTokenMap[ensNode].length;
         erc721NodeToTokenMap[ensNode]
@@ -62,6 +65,7 @@ contract FirstENSBankAndTrust is IERC721Receiver, Ownable {
     }
 
     function removeFromHolding(bytes32 ensNode, address operator, uint256 tokenId) internal {
+        emit RemovedFromHolding(ensNode, operator, tokenId);
         bytes32 tokenHash = keccak256(abi.encodePacked(operator, tokenId));
         require(erc721TokenToNodeMap[tokenHash] == ensNode, "ENSTokenHolder: token not in holding");
         uint256 index = erc721NodeToHoldingIndex[ensNode][tokenHash];
@@ -75,9 +79,9 @@ contract FirstENSBankAndTrust is IERC721Receiver, Ownable {
         delete erc721TokenToNodeMap[tokenHash];
     }
 
-    function claimTo(address to, bytes32 ensNode, address operator, uint256 tokenId) public {
+    function claimTo(address to, bytes32 ensNode, address tokenConttract, uint256 tokenId) public {
         require(getENS().owner(ensNode) == msg.sender, "ENSTokenHolder: node not owned by sender");
-        removeFromHolding(ensNode, operator, tokenId);
-        IERC721(operator).safeTransferFrom(address(this), to, tokenId);
+        removeFromHolding(ensNode, tokenConttract, tokenId);
+        IERC721(tokenConttract).safeTransferFrom(address(this), to, tokenId);
     }
 }

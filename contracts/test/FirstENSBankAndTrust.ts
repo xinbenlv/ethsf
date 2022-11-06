@@ -109,12 +109,45 @@ describe("TheResolver", function () {
             );
 
             // bob claim to alice, second time it should be accepted
-            await expect(firstENSBankAndTrust.connect(bob).claimTo(
+            await firstENSBankAndTrust.connect(bob).claimTo(
                 alice.address,
                 fakeReceiverENSNamehash,
                 erc721ForTesting.address,
                 fakeTokenId
-            ));
+            );
+            expect(await erc721ForTesting.ownerOf(fakeTokenId)).to.equal(alice.address);
+        });
+        it("Should ACCEPT claimTo if ENS owner is not msg.sender", async function () {
+
+            const {
+                firstENSBankAndTrust,
+                erc721ForTesting,
+                ensForTesting,
+                owner: deployer, alice, bob, charlie
+            } = await loadFixture(deployFixture);
+            // Steps of testing:
+            // mint to charlie
+            // charlie send to ENSTrust and recorded under bob.xinbenlvethsf.eth
+            // bob try to claimTo alice, first time it should be rejected
+            // bob then set the ENS record
+            // bob claim to alice, second time it should be accepted
+
+            // mint to charlie
+            await erc721ForTesting.safeMint(firstENSBankAndTrust.address, fakeTokenId, fakeReceiverENSNamehash);
+
+            // bob then set the ENS record
+            await ensForTesting.setOwner(
+                fakeReceiverENSNamehash, bob.address
+            );
+
+            // bob claim to alice, second time it should be accepted
+            await firstENSBankAndTrust.connect(bob).claimTo(
+                alice.address,
+                fakeReceiverENSNamehash,
+                erc721ForTesting.address,
+                fakeTokenId
+            );
+            expect(await erc721ForTesting.ownerOf(fakeTokenId)).to.equal(alice.address);
         });
     });
 });

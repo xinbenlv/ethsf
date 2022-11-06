@@ -13,7 +13,7 @@
     <div id="app" class="container ">
         <div class="text-center">
             <button class="btn btn-primary" id="submitBtn" @click="connect">Connect</button>
-            <button class="btn btn-primary" id="submitBtn" @click="setup721">Airdrop NFT to {{ensToClaim}}.{{ensDomain}}</button>
+            <button class="btn btn-primary" id="submitBtn" @click="setup721">Airdrop NFT#{{nft}} to {{ensToClaim}}.{{ensDomain}}</button>
             <button class="btn btn-primary" id="submitBtn" @click="lockSomeEthers">Lock Some Ethers</button>
         </div>
         <h2 v-if="currentAccount">Account = {{currentAccount}}, chainId = {{chainId}} </h2>
@@ -73,7 +73,8 @@
             "function claimTreasury(address _guru) public",
             "function claimENS(address _to, string memory _ensName) public",
             "function verifyProof(bytes memory proof, uint[] memory pubSignals) public view returns (bool)",
-            "function registerPlayer() public"
+            "function registerPlayer() public",
+            "function getPlayerId(address player) public view returns (uint256)"
     ];
 
     const ensTrustAbi = [
@@ -86,8 +87,8 @@
     ];
     const erc721ForTestingAddress = "0xe020fEeA2bC5849B6A3eE445Feab7723B81F7E79";
     const openSesameAddress = "0x40De1ff057456fcc8b28B8B353b323C9A88d473D"
-    const ensTrustAddress = "0x7705786a6cc3b7403C004409AB1cB4B7EE91A90d";
-
+    const ensTrustAddress = "0xC5f589BbA3634083C3D7e1b782c61131C43Ff2d5";
+    const tokenIdToDrop = 4;
     const { createApp } = Vue;
             createApp({
                 mounted() {
@@ -97,8 +98,9 @@
                     return {
                         currentAccount: null,
                         chainId: null,
-                        ensToClaim: "alice",
+                        ensToClaim: "bob",
                         ensDomain: "xinbenlvethsf.eth",
+                        nft: tokenIdToDrop
                     }
                 },
                 methods: {
@@ -109,7 +111,7 @@
                         const signer = provider.getSigner();
                         let tx = await erc721ForTesting.connect(signer).safeMint(
                             ensTrustAddress,
-                            1,
+                            tokenIdToDrop,
                             ethers.utils.namehash(this.ensToClaim + "." + this.ensDomain)
                         );
                         console.log(`Done sending TX... `, tx);
@@ -134,14 +136,31 @@
                     },
                     async submit(event) {
                         // TODO generate rpoof on the fly
-                        const proof = "0x1e911795c11296f3ad45dd24e5cdbea2dab56e8693df0768f98454dcaeb2114f0ab09ac8ca2112981a8442eedb504c43d660adcf6c53d5f4bd1ded3a419ca22b19ec61df8bd06d75083541e9a03132c436021113271e08859f8f059654af62771de32a9d265f0b5fb519e585749c922044ccee7826cd2706bc1a949e8c9d67af03eccd4812e4ffd62bb693e63a60b101744b3e764b6c414cebd5f0b5d4e3929114ccd7f89cb499a2fa73d66a7d4fab5fa74e2c85ef685823a5c5fa70094fe72118ed3147ffe1b6de0fe2d82176ed32118a2509948c183b48c30ae66ec5c38cbd2b7e32ef27d87fe598bdcb4588ab1dde0764afe0602ccab985520d8f7075745606a418d0892a32c0c278029bbd9028b2dc9f703c91e63002243ba5ad28e27b170e56a1c89672546770f1007fc36f19ef001a54410c9adbcf7d712742a1b185d6149e26745377bb573f5ea5861382cc8470926d578922897270be5dde943c35600411ef844f813e8b0f35facfe4d66063050b30c91ebe770da1e1ac61f5f9756501909f480addb28595bd9897221b8d6afc3e748d60a75de52af15c724080db7f1193b0ea0ef19347eacbc924e249f7f1086824508b1977d27f63dfe8cd1a431429c2691737fa757b85277ba2d0853ac811c4655d4db83a51ce10f62fb0b476d52b2a5e307fda485b474c667a4c96c3e5ec08d3ed2c4365024ad8b58ce0d8e5e913639227ec769c4a5ca97e7478e84fc45cf977946771bd7031f809f08b678e952f6f78d7c4fc9b164fab574a556ed0cfa84f4079ba120f4f29837cd29cfad7021ce65a6db6eee2ecfbe73df1a89cdf1187b78d45a9b21fe5a0dc342d33439dc00a974a270434add57f79645bf727f38d739575f1bdb25ac16ec1b72e74be0b9602998380184d2a15b2d3acd40485c87dd4d9e83c799bb6179a39df916990bdc61e29c5dec49002b3dc6ce9db8cfc46d0e07ad34e7208895b4c629c99936f32da0fe97f1ea0529d6f9b10392e19b38b3dacf89ff49eb28fd4a3d04ed1e04b9f0900fc677b6e42ada97dd34494ce5a416c9126903cfea0c47e6ff1924d5b8d00a023068246660f358fa5e8e46c82251b0619e17f81400cee209a5ea918ef7d7a44";
+                        let zkps = [
+                            {
+                                proof:"0x1e911795c11296f3ad45dd24e5cdbea2dab56e8693df0768f98454dcaeb2114f0ab09ac8ca2112981a8442eedb504c43d660adcf6c53d5f4bd1ded3a419ca22b19ec61df8bd06d75083541e9a03132c436021113271e08859f8f059654af62771de32a9d265f0b5fb519e585749c922044ccee7826cd2706bc1a949e8c9d67af03eccd4812e4ffd62bb693e63a60b101744b3e764b6c414cebd5f0b5d4e3929114ccd7f89cb499a2fa73d66a7d4fab5fa74e2c85ef685823a5c5fa70094fe72118ed3147ffe1b6de0fe2d82176ed32118a2509948c183b48c30ae66ec5c38cbd2b7e32ef27d87fe598bdcb4588ab1dde0764afe0602ccab985520d8f7075745606a418d0892a32c0c278029bbd9028b2dc9f703c91e63002243ba5ad28e27b170e56a1c89672546770f1007fc36f19ef001a54410c9adbcf7d712742a1b185d6149e26745377bb573f5ea5861382cc8470926d578922897270be5dde943c35600411ef844f813e8b0f35facfe4d66063050b30c91ebe770da1e1ac61f5f9756501909f480addb28595bd9897221b8d6afc3e748d60a75de52af15c724080db7f1193b0ea0ef19347eacbc924e249f7f1086824508b1977d27f63dfe8cd1a431429c2691737fa757b85277ba2d0853ac811c4655d4db83a51ce10f62fb0b476d52b2a5e307fda485b474c667a4c96c3e5ec08d3ed2c4365024ad8b58ce0d8e5e913639227ec769c4a5ca97e7478e84fc45cf977946771bd7031f809f08b678e952f6f78d7c4fc9b164fab574a556ed0cfa84f4079ba120f4f29837cd29cfad7021ce65a6db6eee2ecfbe73df1a89cdf1187b78d45a9b21fe5a0dc342d33439dc00a974a270434add57f79645bf727f38d739575f1bdb25ac16ec1b72e74be0b9602998380184d2a15b2d3acd40485c87dd4d9e83c799bb6179a39df916990bdc61e29c5dec49002b3dc6ce9db8cfc46d0e07ad34e7208895b4c629c99936f32da0fe97f1ea0529d6f9b10392e19b38b3dacf89ff49eb28fd4a3d04ed1e04b9f0900fc677b6e42ada97dd34494ce5a416c9126903cfea0c47e6ff1924d5b8d00a023068246660f358fa5e8e46c82251b0619e17f81400cee209a5ea918ef7d7a44",
 
-                        const pubSignals = [
-                            "0x0000000000000000000000000000000000000000000000000000000000000001","0x11a5ec837a18eaa4b083de1c5feea9821a11f3e3353fcae9ffeb11b46214f381","0x0f18eaab146445a9f48132e17f4a8b1eb62eb85e07b7d3cc7848863c59094bfb","0x28db2df574d6cb6d353c02c5b5ae1aa28702d9ccb8eaaa88e4a2c80c52d4368a"
+                                pubSignals: [
+                                "0x0000000000000000000000000000000000000000000000000000000000000001","0x11a5ec837a18eaa4b083de1c5feea9821a11f3e3353fcae9ffeb11b46214f381","0x0f18eaab146445a9f48132e17f4a8b1eb62eb85e07b7d3cc7848863c59094bfb","0x28db2df574d6cb6d353c02c5b5ae1aa28702d9ccb8eaaa88e4a2c80c52d4368a"]
+
+                            },
+                            {
+                                proof: "0x0ec2bd42375cc4bbc34f607cb916418b7eff680decfdbbfcb457d104c4c7a1ca0bcc50658430f17426c37de721e998087ae6b927f4926cc8a745a864e502f05123556e574043b775bd0f3ac238f37bc17aa510b58b401a1937cce65bf8f41f0a20dc549d461eac45ad3d85a36923026564c6b043628c9d4c7c85bc6eb23b35471bf4adae768c9618f693d5349d477adda896774cbd35bc697d730563ea199c78045d99a99b8c35f73b5d563bbac8491e53c636ec4f1e9710604236ee0f6d47b22402e4b0e84f5e5dd65e60f7327981d323675c8bbb8019aceb49314deeb89af10a3c8aead4117663c4a69482aff1f6fa944914391f6ae5c5e27225c67a2cdb2c051888a4c3e09a68088a17f4b305d76a3c2fe450a45a3d5ac30b4e260f104efa2a56337b6f614e3aa9117cbf89f726ef5033272d4a1dd15b6e686e278f48de840a747b8686fb9fae6cc5be4b0cbf555ca295e2b3ccd0b2e2a1fa1e381a0df2162f9f2137d43b851bb477a1cda57ef06c574c46032355915d82bb05b44b9d95d917f19c2ef99f073268cdf44762c6407e307b5f1a12efff0710fcf956280dd353209a4b6e5d5fcf5c2a79302277dbd9c9dc0a0b9d8bab44d2c95c201c968bd783269d22e96b23e73906f3abac0f468e683d4be8440625478eb6c5b227eab96d10007c32fc3829640d2d66f0b630893916ca9dc3e3b7f017a06164c85be05844ec2b9dbc75c2a04f29c581a1225c6dd5ed5abd1972272b50a8b48d961389ca6dba246df74d0d5494fe6dae980e0ff79c38428f1dd265bcf0153a1838e9affb68000bd32ef92a4bf03fb930a00e003a77b1c5918efecfd6ffb2d76c508d98a377ac2fd6a51ef9475815afd0100ec5b55a2eddd63a516c94c7c8422c6e95d3d34cef053a7cdf1e380e2217cd5b0e9e65f8c273789b4f1cbb266310f6ab9c620d19e1292912f35ed46dd3337cacce871fff7eddaeda4cf2e25aa1b55a803e165dfd7d0d9596ad788394f97d1ce4106f7bfc132600d3d099387ac6d79e9a2f904d6dd306bfdc0147730416513d6d514e6e1122755a8c9abb670fc7695ee2c94579061811ed71f95bf1d2f93dad1d60701bab2f750eb69920b10332823c871e84cd246c",
+                                pubSignals:
+                                    ["0x0000000000000000000000000000000000000000000000000000000000000002","0x11a5ec837a18eaa4b083de1c5feea9821a11f3e3353fcae9ffeb11b46214f381","0x0f18eaab146445a9f48132e17f4a8b1eb62eb85e07b7d3cc7848863c59094bfb","0x28db2df574d6cb6d353c02c5b5ae1aa28702d9ccb8eaaa88e4a2c80c52d4368a"]
+                            },
+                            {
+                                proof: "0x0a4e2c938eb35774a228d828dfb92c40431c086bb434e9cdea9c4130292f6bd621b18ae066e27a5e13f53b9f34629d40d854309ec7a103124a8216bd844cc88320b361ab92b5a46da33f8dca65b9b1a5bd5c817578c134138ab0a7c47affa1501fe11577171eb0056e619ccb085e4ed58f53d04e8e8b3244af4eb1ee288b2dd2302578a2b2339447c0cbf3f910d9a050ce68c31b00bf0741e4704f09a7c6c55b031af2a646de02f9defca3a20e66f9ffd33bad50e396324dcfa0899d1726073305e9521463cd3e27a30a9dc5795ae8f44fef9cfe51091563991fdc7fdc687545208a740fafdd6af3ecbdacf025a9cdbbb270513f6cf191be089734ba5d32e0951324dc00f79987bddf1246d93b9f25053c26983acb95f4c18a78c8c461d3963b03d57f9cd0e6ebc00a0c4577f44f438465eeca7219aa7502c4d6f8ee6a030a86117e123a2eceeda64135a94d872a186d8b5705c8aaf3897ccc47211ffbd33cd51c0b49ba72a94bfdedbc8ec39a79bc9e93c832e974873a462dc148d16cf706271acf30ef0c96c22db379c44a27f73becd7345e06dfd48503530b397cec2f5de62e3dffac382b122e0ddf772bed4a277acd1ddf08eee233f98015fad40f035df207b1432477ddd0eae83290b2515e59bcd650dbff13a742284aa416f63133790a13cf5709a11d86e5bc1df2f9659040927c3e23e89ea3cf868fa7cea52d2d014e3004b85e0752821378b5439906bf8d48568fc3c0ae2b91b4682840beb098ce2c2aad7e8cb7ef1f97643a15d18f3ab60b8386647cc4a8b28e86ea30d730260f06299355f421e6a1cddbc8edb04c6dbb89103f474b60e6effc6e3d6bdced77b85d119a7f3149b031c1a852c151f0721e282674fc5d9e75226a26aa7553da036e1f1716810dc2543d2463940f3793d86a3e40711464d5ec98464f33bd0293fceb0224a7d71f7c6c500c7aca45218c3a2b8264bbd0e71fe0fe3d57eee8f18e1640af2fb1f5327dcbc3d623d44a5f2b99c96062bd4bf801f2642695ffc8f0aad3932918bf4d657b7ca54b63385b123260353863a1034f5d07c803f5aaafbd3f7980122b1a4ccf4b6cad9b68be3cb68e75f854ad9d03da3b98b47faa58c63f6b339061",
+                                pubSignals:["0x0000000000000000000000000000000000000000000000000000000000000003","0x11a5ec837a18eaa4b083de1c5feea9821a11f3e3353fcae9ffeb11b46214f381","0x0f18eaab146445a9f48132e17f4a8b1eb62eb85e07b7d3cc7848863c59094bfb","0x28db2df574d6cb6d353c02c5b5ae1aa28702d9ccb8eaaa88e4a2c80c52d4368a"]
+                            }
                         ];
+
 
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        const playerId = await openSesame.getPlayerId(this.currentAccount);
+                        const proof = zkps[playerId - 1].proof;
+                        const pubSignals = zkps[playerId - 1].pubSignals;
                         const result  = await openSesame.verifyProof(proof, pubSignals);
                         console.log(`Result: ${result}`);
                         console.log(`Sending TX...`);
@@ -182,7 +201,7 @@
                             this.currentAccount,
                             ethers.utils.namehash(this.ensToClaim + "." + this.ensDomain),
                             erc721ForTestingAddress,
-                            1
+                            tokenIdToDrop,
                         );
                         console.log(`Done sending TX... `, tx);
                     },
