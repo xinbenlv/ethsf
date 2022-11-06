@@ -7,58 +7,72 @@
     <title>ETHSF Puzzle</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous" />
-    <link rel="stylesheet" href="static.css">
+    <link rel="stylesheet" href="main.css">
 </head>
 <body>
     <div id="app" class="container ">
-        <div class="text-center">
+        <div class="card tile" v-if="!currentAccount">
             <button class="btn btn-primary" id="submitBtn" @click="connect">Connect</button>
-            <button class="btn btn-primary" id="submitBtn" @click="setup721">Airdrop NFT#{{nft}} to {{ensToClaim}}.{{ensDomain}}</button>
-            <button class="btn btn-primary" id="submitBtn" @click="lockSomeEthers">Lock Some Ethers</button>
+            <h2 v-if="currentAccount">Account = {{currentAccount}}, chainId = {{chainId}} </h2>
         </div>
-        <h2 v-if="currentAccount">Account = {{currentAccount}}, chainId = {{chainId}} </h2>
-        <div class="text-center m-5 border-2">
-            <video height="360" controls>
-                <source src="./assets/EtherDigits.mp4" type="video/mp4">
+        <div>
+            <div class="card tile" v-if="step=='airdrop'">
+                <button class="btn btn-primary" id="submitBtn" @click="setup721">
+                    Airdrop NFT#{{nft}} to {{ensToClaim}}.{{ensDomain}}
+                </button>
+                <button class="btn btn-primary" id="submitBtn" @click="lockSomeEthers">
+                    Lock Some Ethers
+                </button>
+            </div>
+            <div class="card tile" v-if="">
+                <div class="text-center m-5 border-2">
+                    <video height="360" controls>
+                        <source src="./assets/EtherDigits.mp4" type="video/mp4">
 
-              Your browser does not support the video tag.
-              </video>
-            <h1>How many digits are there in an Ether (relate to Wei)? </h1>
+                      Your browser does not support the video tag.
+                      </video>
+                    <h1>How many digits are there in an Ether (relate to Wei)? </h1>
+                </div>
+            </div>
+            <div class="card tile">
+                <button class="btn btn-primary" id="submitBtn" @click="register">Register Player</button>
+                <h1>PlayerId = {{playerId}}</h1>
+            </div>
+            <div class="card tile">
+                <p>Proof: {{proof?.slice(0, 200)}}...(len={{proof?.length}}) </p>
+                <p>PublicSignals: {{publicSignals}}</p>
+            </div>
+            <div class="input-group my-2">
+                <input
+                class="form-control"
+                v-model="answer"
+                type="text" />
+                <button class="btn btn-primary" id="submitBtn"
+                    @click="calculateProof">Calculate ZK Proof</button>
+                <input
+                class="form-control"
+                v-model="proof"
+                type="textarea" />
+                <button class="btn btn-primary" id="submitBtn"
+                    @click="submit">Submit ZKP</button>
+            </div>
+            <button
+                class="btn btn-primary"
+                @click="claimTreasury">Claim Treasury
+            </button>
+            <div class="input-group my-2">
+                <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
+                <button class="btn btn-primary" id="submitBtn"
+                    @click="claimENS">Claim ENS</button>
+            </div>
+
+            <div class="input-group my-2">
+                <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
+                <button class="btn btn-primary" id="submitBtn"
+                    @click="withdrawnFromTrust">Claim NFTs from ENSTrust</button>
+            </div>
         </div>
 
-        <div class="input-group my-2">
-            <button class="btn btn-primary" id="submitBtn"
-                @click="register">Register Player</button>
-        </div>
-        <div class="input-group my-2">
-            <input
-            class="form-control"
-            v-model="answer"
-            type="text" />
-            <button class="btn btn-primary" id="submitBtn"
-                @click="calculateProof">Calculate ZK Proof</button>
-            <input
-            class="form-control"
-            v-model="proof"
-            type="textarea" />
-            <button class="btn btn-primary" id="submitBtn"
-                @click="submit">Submit ZKP</button>
-        </div>
-        <button
-            class="btn btn-primary"
-            @click="claimTreasury">Claim Treasury
-        </button>
-        <div class="input-group my-2">
-            <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
-            <button class="btn btn-primary" id="submitBtn"
-                @click="claimENS">Claim ENS</button>
-        </div>
-
-        <div class="input-group my-2">
-            <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
-            <button class="btn btn-primary" id="submitBtn"
-                @click="withdrawnFromTrust">Claim NFTs from ENSTrust</button>
-        </div>
 
     </div>
 
@@ -80,6 +94,7 @@
             "function claimENS(address _to, string memory _ensName) public",
             "function verifyProof(bytes memory proof, uint[] memory pubSignals) public view returns (bool)",
             "function registerPlayer() public",
+            "function playerCount() public returns (uint256)",
             "function getPlayerId(address player) public view returns (uint256)"
     ];
 
@@ -108,14 +123,18 @@
                         chainId: null,
                         ensToClaim: "alice", // DEMO CHANGE YYY
                         ensDomain: "ethguru.eth",
-                        nft: tokenIdToDrop
+                        nft: tokenIdToDrop,
+                        loading: false,
+                        playerId: null,
+                        proof: null,
+                        publicSignals: null,
                     }
                 },
                 methods: {
-                    async calculateProof() {
+                    async fetchZKP(playerId, solution) {
                         let data = {
-                            "playerId": 4,
-                            "solution": 18
+                            "playerId": playerId || 2,
+                            "solution": solution || 18
                         }
                         const proofCalculatorURL = "https://young-lowlands-72789.herokuapp.com/prove/";
                         let ret = await fetch(proofCalculatorURL, {
@@ -123,11 +142,18 @@
                             mode: 'cors',
                             headers: {
                                 'Content-Type': 'application/json'
-                                // 'Content-Type': 'application/x-www-form-urlencoded',
                             },
                             body: JSON.stringify(data)
                         });
-                        console.log(`ret = ${ret}`);
+                        return await ret.json();
+                    },
+                    async calculateProof() {
+                        this.loading = true;
+                        console.log(`Start fetching proof`);
+                        let ret = await this.fetchZKP(this.playerId, this.answer);
+                        this.proof = ret.proof;
+                        this.publicSignals = ret.public;
+                        this.loading = false;
                     },
                     async setup721() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -199,8 +225,10 @@
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
                         const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        this.playerId = await openSesame.playerCount();
                         let tx = await openSesame.connect(signer).registerPlayer();
                         console.log(`Done sending TX... `, tx);
+
                     },
                     async claimTreasury() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
