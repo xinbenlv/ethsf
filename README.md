@@ -16,10 +16,9 @@ circom mimcsponge.circom --r1cs --wasm
 npx snarkjs plonk setup mimcsponge.r1cs powersOfTau28_hez_final_13.ptau mimcsponge.zkey
 npx snarkjs zkey export solidityverifier mimcsponge.zkey mimcsponge.sol
 npx snarkjs zkey export verificationkey mimcsponge.zkey mimcsponge_vkey.json
-# test proving
+# test proving (generate calldata for the smartcontract)
 node mimcsponge_js/generate_witness.js mimcsponge_js/mimcsponge.wasm hash_input.json mimcsponge.wtns
 npx snarkjs plonk prove mimcsponge.zkey mimcsponge.wtns mimcsponge_proof.json mimcsponge_public.json
-# generate calldata for the smartcontract
 npx snarkjs zkey export soliditycalldata mimcsponge_public.json \
 mimcsponge_proof.json | sed $$'s/,/\\\n/' > \
 mimcsponge_calldata.dat
