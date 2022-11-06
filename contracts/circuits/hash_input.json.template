@@ -1,6 +1,4 @@
 {
-  "ins": [
-    INPUT_NUMBER
-  ],
-  "k": 0
+  "in": PUZZLE_SOLUTION,
+  "user_id_in": USER_ID_SMALL_NUMBER
 }

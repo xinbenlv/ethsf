@@ -292,4 +292,23 @@ template MiMCFeistel(nrounds) {
     }
 }
 
-component main = MiMCSponge(1, 220, 3);
+template Main() {
+    var N_IN = 1;
+    var N_OUT = 3;
+    signal input user_id_in;
+    signal input in;
+    signal output user_id_out;
+    signal output outs[N_OUT];
+
+    component sponge = MiMCSponge(N_IN, 220, N_OUT);
+
+    user_id_out <== user_id_in;
+    sponge.ins[0] <== in;
+    sponge.k <== 0;
+
+    for(var i = 0; i < N_OUT; i++){
+        outs[i] <== sponge.outs[i];
+    }
+}
+
+component main = Main();

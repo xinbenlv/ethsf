@@ -15,7 +15,6 @@ cp hash_input.json.template hash_input.json
 circom mimcsponge.circom --r1cs --wasm
 npx snarkjs plonk setup mimcsponge.r1cs powersOfTau28_hez_final_13.ptau mimcsponge.zkey
 npx snarkjs zkey export solidityverifier mimcsponge.zkey mimcsponge.sol
-npx snarkjs zkey export verificationkey mimcsponge.zkey mimcsponge_vkey.json
 # test proving
 node mimcsponge_js/generate_witness.js mimcsponge_js/mimcsponge.wasm hash_input.json mimcsponge.wtns
 npx snarkjs plonk prove mimcsponge.zkey mimcsponge.wtns mimcsponge_proof.json mimcsponge_public.json
