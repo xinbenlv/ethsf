@@ -6,7 +6,6 @@ module.exports = async function builder(code, options) {
 
     let wc;
 
-
     const instance = await WebAssembly.instantiate(wasmModule, {
         runtime: {
             exceptionHandler: function (code) {

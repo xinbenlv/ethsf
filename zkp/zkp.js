@@ -1,13 +1,13 @@
-// ZKP SNARK proof helper function
+#!/usr/bin/env node
 
 const wc = require("./witness_calculator.js");
-const {readFileSync, writeFileSync} = require("fs");
+const {readFileSync, writeFileSync, writeFile} = require("fs");
 const {plonk} = require("snarkjs");
-const { mainModule } = require("process");
+const path = require("path");
 
-let WASM_PATH = "./mimcsponge.wasm"
-let ZKEY_PATH = "./mimcsponge.zkey"
-let WTNS_PATH = "./mimcsponge.wtns"
+let WASM_PATH = path.join(__dirname, "./mimcsponge.wasm");
+let ZKEY_PATH = path.join(__dirname, "./mimcsponge.zkey");
+let WTNS_PATH = path.join(__dirname, "./mimcsponge.wtns");
 
 function calulateWitness(potentialSolution, userId) {
     let input = {
@@ -33,12 +33,17 @@ async function computeProof(solution, playerId) {
     return plonk.exportSolidityCallData(data.proof, data.publicSignals);
 }
 
-let main = async () => {
-    let data = await computeProof(18, 4);
+let main = async (solution, userId) => {
+    let data = await computeProof(solution, userId);
     console.log(data);
 }
 
-main().then(()=> {
-    console.log(`Done!`)
-    process.exit(0);
-});
+// node zkp.js 18 2
+if (process.argv.length != 4) {
+    console.log("Usage: node zkp.js <puzzle-solution> <user-id>");
+    process.exit(1);
+} else {
+    main(process.argv[2], process.argv[3]).then(() => {
+        process.exit(0);
+    });
+}
