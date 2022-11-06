@@ -87,9 +87,9 @@
     ];
     const erc721ForTestingAddress = "0xf23D13244e028F96336d8B8774debE70CE72025E";
     // DEMO CHANGE YYY if changed ENS server
-    const openSesameAddress = "0x40De1ff057456fcc8b28B8B353b323C9A88d473D"
+    const openSesameAddress = "0xed279665ef342Efb2C86e5f9fE729e92999D1B80"
 
-    const ensTrustAddress = "0xC5f589BbA3634083C3D7e1b782c61131C43Ff2d5";
+    const ensTrustAddress = "0xb1785ECA913a0d9D5b8167297746f42B789192E2";
     const tokenIdToDrop = 1; // DEMO CHANGE YYY
     const { createApp } = Vue;
             createApp({
@@ -191,6 +191,8 @@
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
                         const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        console.log(`Singer`, signer);
+                        console.log(`this.currentAccount`, this.currentAccount);
                         let tx = await openSesame.connect(signer).claimENS(this.currentAccount, "alice");
                         console.log(`Done sending TX... `, tx);
                     },
