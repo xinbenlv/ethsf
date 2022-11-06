@@ -21,7 +21,7 @@ ensTrustAddresshttps://goerli.etherscan.io/address/0xb1785ECA913a0d9D5b816729774
 
 openSesameAddress: https://mumbai.polygonscan.com/address/0x24FBDD7E662e21e0bB16a3e437d73Cc059897a7F#code
 
-### Deployment on 
+### Deployment on
 ## Summary
 
 This is a prototype game that allows one to certify credentials on chain using Zero Knowledge Proof SNARKs.

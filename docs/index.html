@@ -13,7 +13,7 @@
 
     <div id="app" class="container ">
         <div class="text-center my-5">
-            <h1>OpenSesame: ZK Puzzle and ENSTrust</h1>
+            <h1>[Polygon] OpenSesame: ZK Puzzle and ENSTrust</h1>
         </div>
 
         <div class="text-center">
@@ -133,7 +133,7 @@
                         publicSignals: null,
                         ethValueLocked: 0,
                         erc721ForTestingAddress: "0xf23D13244e028F96336d8B8774debE70CE72025E",
-                        openSesameAddress:"0xed279665ef342Efb2C86e5f9fE729e92999D1B80",
+                        openSesameAddress:"0x24FBDD7E662e21e0bB16a3e437d73Cc059897a7F",
                         ensTrustAddress:"0xb1785ECA913a0d9D5b8167297746f42B789192E2",
                         tokenIdToDrop: 3, // DEMO CHANGE YYY
                         doneClaim: false
@@ -142,7 +142,7 @@
                 methods: {
                     async fetchZKP(playerId, solution) {
                         let data = {
-                            "playerId": parseInt(playerId) || 3,
+                            "playerId": parseInt(playerId) || 1,
                             "solution": parseInt(solution) || 18
                         }
                         console.log(`Data`, data);
