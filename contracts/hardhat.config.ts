@@ -5,6 +5,8 @@ import {HardhatUserConfig} from 'hardhat/config';
 import * as dotenv from 'dotenv';
 import "@nomiclabs/hardhat-ethers";
 
+import "./tasks/guru";
+import "./tasks/depver";
 import "./tasks/resolve";
 
 dotenv.config();

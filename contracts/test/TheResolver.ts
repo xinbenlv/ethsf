@@ -35,5 +35,15 @@ describe("TheResolver", function () {
             expect(await theResolver.computeNamehash("charlie.xinbenlvethsf.eth"))
                 .to.equal("0xeba6caacf1cf33c9d5b1fe10ec2add0aa95537bfe0140eb36adad37b75bc6255");
         });
+
+        it("Should compute right namehash charlie.xinbenlvethsf.eth", async function () {
+            const { theResolver } = await loadFixture(deployOneYearLockFixture);
+            expect(await theResolver.computeNamehash("xinbenlvethsf.eth"))
+                .to.equal("0x95d84257fea04fd81e4f758f1027e8e23c4a80f0b4770cc410011b3663eb3f35");
+            expect(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("charlie")))
+                .to.equal("0x87a213ce1ee769e28decedefb98f6fe48890a74ba84957ebf877fb591e37e0de");
+            expect(await theResolver.computeNamehash("charlie.xinbenlvethsf.eth"))
+                .to.equal("0xeba6caacf1cf33c9d5b1fe10ec2add0aa95537bfe0140eb36adad37b75bc6255");
+        });
     });
 });

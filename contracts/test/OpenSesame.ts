@@ -31,7 +31,7 @@ describe("OpenSesame", function () {
 
         it("Should be deployable", async function () {
             let {contract, owner, alice, bob, charlie} = await loadFixture(deployFixture);
-            expect(contract.deployTransaction.gasLimit).to.be.lessThanOrEqual(3000000);
+            expect(contract.deployTransaction.gasLimit).to.be.lessThanOrEqual(4000000);
         });
 
         it("Should be able to correctly register player", async function () {
