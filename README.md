@@ -1,25 +1,34 @@
-# ethsf
+# Open Sesame
 
-## Developers
+![Demo](./demo/demo0.gif)
 
-### Circuits
+A ZK SNARK Puzzle Platform that unlocks certification NFTs via ENS
 
-- [Install circom compiler](https://docs.circom.io/getting-started/installation/#installing-circom)
-- [Download the ptau file to `contracts/circuits`](https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_13.ptau)
+## Summary
 
-- Update the value you want to be the solution of the puzzle
+This is a prototype game that allows one to certify credentials on chain using Zero Knowledge Proof SNARKs.
 
-```shell
-cd contracts/circuits
-cp hash_input.json.template hash_input.json
-circom mimcsponge.circom --r1cs --wasm
-npx snarkjs plonk setup mimcsponge.r1cs powersOfTau28_hez_final_13.ptau mimcsponge.zkey
-npx snarkjs zkey export solidityverifier mimcsponge.zkey mimcsponge.sol
-# test proving
-node mimcsponge_js/generate_witness.js mimcsponge_js/mimcsponge.wasm hash_input.json mimcsponge.wtns
-npx snarkjs plonk prove mimcsponge.zkey mimcsponge.wtns mimcsponge_proof.json mimcsponge_public.json
-# generate calldata for the smartcontract
-npx snarkjs zkey export soliditycalldata mimcsponge_public.json \
-mimcsponge_proof.json | sed $$'s/,/\\\n/' > \
-mimcsponge_calldata.dat
-```
+User Flow:
+1. Proves you can solve a specific puzzle
+2. Claim ENS subdomain NFT (held in trust until puzzle is completed)
+3. Submit solution to on chain puzzle releasing NFT
+
+The Zero Knowledge SNARKs allow us to decentralize the credentialing process. Users answer puzzles to gain credentials while not revealing the solutions to the rest of the chain.
+
+In particular, the ENSTrust feature we develop in this project decouples the NFT which can be airdropped to people who already have EOA accounts. We believe this is going to make it much more appealing and easier for users to on ramp to Ethereum through credentialing systems
+
+At it core, it has the following two main technologies:
+- “ENSTrust” to which you can drop NFTs to an unclaimed ENS domain, EIP-5298 (draft)
+- A puzzle with ZK-SNARKS to proof that you know the answer, using CIRCOM, zksnarkjs, Plonk
+
+## Developer
+
+### Tools
+
+1. Hardhat to build solidity smart contract
+2. Deployed verifier smart contract on Goerli (test net)
+3. Django, NodeJS for backend serving which is currently being used to generate the proof
+
+## zkSNARK Process
+
+![ZKPDiagram](./demo/zkp_diagram.png)
