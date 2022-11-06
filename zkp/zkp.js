@@ -39,15 +39,15 @@ let main = async (solution, userId) => {
 }
 
 // // node zkp.js 18 2
-// if (process.argv.length != 4) {
-//     console.log("Usage: node zkp.js <puzzle-solution> <user-id>");
-//     process.exit(1);
-// } else {
-//     main(process.argv[2], process.argv[3]).then(() => {
-//         process.exit(0);
-//     });
-// }
-
-module.exports = {
-    computeProof
+if (process.argv.length != 4) {
+    console.log("Usage: node zkp.js <puzzle-solution> <user-id>");
+    process.exit(1);
+} else {
+    main(process.argv[2], process.argv[3]).then(() => {
+        process.exit(0);
+    });
 }
+
+// module.exports = {
+//     computeProof
+// }
