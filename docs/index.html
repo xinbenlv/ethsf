@@ -36,6 +36,12 @@
             v-model="answer"
             type="text" />
             <button class="btn btn-primary" id="submitBtn"
+                @click="calculateProof">Calculate ZK Proof</button>
+            <input
+            class="form-control"
+            v-model="proof"
+            type="textarea" />
+            <button class="btn btn-primary" id="submitBtn"
                 @click="submit">Submit ZKP</button>
         </div>
         <button
@@ -106,6 +112,23 @@
                     }
                 },
                 methods: {
+                    async calculateProof() {
+                        let data = {
+                            "playerId": 4,
+                            "solution": 18
+                        }
+                        const proofCalculatorURL = "https://young-lowlands-72789.herokuapp.com/prove/";
+                        let ret = await fetch(proofCalculatorURL, {
+                            method: 'POST',
+                            mode: 'cors',
+                            headers: {
+                                'Content-Type': 'application/json'
+                                // 'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        console.log(`ret = ${ret}`);
+                    },
                     async setup721() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const erc721ForTesting= new ethers.Contract(erc721ForTestingAddress, erc721Abi, provider);
