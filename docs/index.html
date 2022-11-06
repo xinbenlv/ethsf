@@ -10,13 +10,18 @@
     <link rel="stylesheet" href="static.css">
 </head>
 <body>
+
     <div id="app" class="container ">
-        <div class="text-center">
-            <button class="btn btn-primary" id="submitBtn" @click="connect">Connect</button>
-            <button class="btn btn-primary" id="submitBtn" @click="setup721">Airdrop NFT#{{nft}} to {{ensToClaim}}.{{ensDomain}}</button>
-            <button class="btn btn-primary" id="submitBtn" @click="lockSomeEthers">Lock Some Ethers</button>
+        <div class="text-center my-5">
+            <h1>OpenSesame: ZK Puzzle and ENSTrust</h1>
         </div>
-        <h2 v-if="currentAccount">Account = {{currentAccount}}, chainId = {{chainId}} </h2>
+
+        <div class="text-center">
+            <button class="btn btn-primary mx-1" id="submitBtn" @click="connect">Connect</button>
+            <button class="btn btn-primary mx-1" id="submitBtn" @click="setup721">Airdrop NFT#{{nft}} to {{ensToClaim}}.{{ensDomain}}</button>
+            <button class="btn btn-primary mx-1" id="submitBtn" @click="lockSomeEthers">Lock Some Ethers</button>
+            <div v-if="currentAccount">Connected account = {{currentAccount}}, chainId = {{chainId}} (goerli) </div>
+        </div>
         <div class="text-center m-5 border-2">
             <video height="360" controls>
                 <source src="./assets/EtherDigits.mp4" type="video/mp4">
@@ -28,7 +33,17 @@
 
         <div class="input-group my-2">
             <button class="btn btn-primary" id="submitBtn"
-                @click="register">Register Player</button>
+                @click="register"
+            >Register Player
+            </button>
+            <span v-if="playerId"> Registered player ID:{{playerId}}</span>
+        </div>
+        <div class="card tile" v-if="loadingProof || proof">
+            <p v-if="loadingProof">Calculating ZK Proof...</p>
+            <span v-else>
+                <p>Proof: {{proof?.slice(0, 200)}}...(len={{proof?.length}}) </p>
+                <p>PublicSignals: {{publicSignals}}</p>
+            </span>
         </div>
         <div class="input-group my-2">
             <input
@@ -37,27 +52,35 @@
             type="text" />
             <button class="btn btn-primary" id="submitBtn"
                 @click="calculateProof">Calculate ZK Proof</button>
-            <input
-            class="form-control"
-            v-model="proof"
-            type="textarea" />
             <button class="btn btn-primary" id="submitBtn"
                 @click="submit">Submit ZKP</button>
         </div>
-        <button
+        <div>
+            <button
             class="btn btn-primary"
             @click="claimTreasury">Claim Treasury
-        </button>
-        <div class="input-group my-2">
-            <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
-            <button class="btn btn-primary" id="submitBtn"
-                @click="claimENS">Claim ENS</button>
+            </button>
+            <div v-if="ethValueLocked">
+                eth value locked: {{this.ethValueLocked}} eth
+            </div>
         </div>
 
         <div class="input-group my-2">
             <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
             <button class="btn btn-primary" id="submitBtn"
-                @click="withdrawnFromTrust">Claim NFTs from ENSTrust</button>
+                @click="claimENS">Claim your Guru ENS</button>
+        </div>
+
+        <div class="input-group my-2">
+            <button class="btn btn-primary" id="submitBtn"
+                @click="withdrawnFromTrust">
+                Claim your NFTs previously dropped in ENSTrust
+            </button>
+            <div v-if="doneClaim">
+                You've just claimed back your NFT in custody of ENS Trust
+                NFTContract={{this.erc721ForTestingAddress}},
+                id={{this.tokenIdToDrop}}
+            </div>
         </div>
 
     </div>
@@ -91,12 +114,7 @@
         "function mint(address to, uint256 tokenId) public",
         "function safeMint(address to, uint256 tokenId, bytes calldata data) public"
     ];
-    const erc721ForTestingAddress = "0xf23D13244e028F96336d8B8774debE70CE72025E";
-    // DEMO CHANGE YYY if changed ENS server
-    const openSesameAddress = "0xed279665ef342Efb2C86e5f9fE729e92999D1B80"
 
-    const ensTrustAddress = "0xb1785ECA913a0d9D5b8167297746f42B789192E2";
-    const tokenIdToDrop = 1; // DEMO CHANGE YYY
     const { createApp } = Vue;
             createApp({
                 mounted() {
@@ -106,37 +124,56 @@
                     return {
                         currentAccount: null,
                         chainId: null,
-                        ensToClaim: "alice", // DEMO CHANGE YYY
+                        ensToClaim: "charlie", // DEMO CHANGE YYY
                         ensDomain: "ethguru.eth",
-                        nft: tokenIdToDrop
+                        nft: this.tokenIdToDrop,
+                        loading: false,
+                        playerId: null,
+                        proof: null,
+                        publicSignals: null,
+                        ethValueLocked: 0,
+                        erc721ForTestingAddress: "0xf23D13244e028F96336d8B8774debE70CE72025E",
+                        openSesameAddress:"0xed279665ef342Efb2C86e5f9fE729e92999D1B80",
+                        ensTrustAddress:"0xb1785ECA913a0d9D5b8167297746f42B789192E2",
+                        tokenIdToDrop: 3, // DEMO CHANGE YYY
+                        doneClaim: false
                     }
                 },
                 methods: {
-                    async calculateProof() {
+                    async fetchZKP(playerId, solution) {
                         let data = {
-                            "playerId": 4,
-                            "solution": 18
+                            "playerId": parseInt(playerId) || 3,
+                            "solution": parseInt(solution) || 18
                         }
+                        console.log(`Data`, data);
                         const proofCalculatorURL = "https://young-lowlands-72789.herokuapp.com/prove/";
                         let ret = await fetch(proofCalculatorURL, {
                             method: 'POST',
                             mode: 'cors',
                             headers: {
                                 'Content-Type': 'application/json'
-                                // 'Content-Type': 'application/x-www-form-urlencoded',
                             },
                             body: JSON.stringify(data)
                         });
+                        return await ret.json();
+                    },
+                    async calculateProof() {
+                        this.loading = true;
+                        console.log(`Start fetching proof`);
+                        let ret = await this.fetchZKP(this.playerId, this.answer);
+                        this.proof = ret.proof;
+                        this.publicSignals = ret.public;
+                        this.loading = false;
                         console.log(`ret = ${ret}`);
                     },
                     async setup721() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
-                        const erc721ForTesting= new ethers.Contract(erc721ForTestingAddress, erc721Abi, provider);
+                        const erc721ForTesting= new ethers.Contract(this.erc721ForTestingAddress, erc721Abi, provider);
                         console.log(`Sending TX...`);
                         const signer = provider.getSigner();
                         let tx = await erc721ForTesting.connect(signer).safeMint(
-                            ensTrustAddress,
-                            tokenIdToDrop,
+                            this.ensTrustAddress,
+                            this.tokenIdToDrop,
                             ethers.utils.namehash(this.ensToClaim + "." + this.ensDomain)
                         );
                         console.log(`Done sending TX... `, tx);
@@ -144,11 +181,14 @@
                     async lockSomeEthers() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
+                        const ethToSend = 0.1;
                         const tx = await signer.sendTransaction({
-                            to: openSesameAddress,
+                            to: this.openSesameAddress,
                             value: ethers.utils.parseEther("0.1")
                         });
+                        this.ethValueLocked = ethToSend;
                         console.log(`Done sending TX... `, tx);
+                        this.ethValueLocked = ethToSend;
                     },
                     async connect() {
                         console.log(`Now connecting!`);
@@ -164,10 +204,8 @@
                         let zkps = [
                             {
                                 proof:"0x1e911795c11296f3ad45dd24e5cdbea2dab56e8693df0768f98454dcaeb2114f0ab09ac8ca2112981a8442eedb504c43d660adcf6c53d5f4bd1ded3a419ca22b19ec61df8bd06d75083541e9a03132c436021113271e08859f8f059654af62771de32a9d265f0b5fb519e585749c922044ccee7826cd2706bc1a949e8c9d67af03eccd4812e4ffd62bb693e63a60b101744b3e764b6c414cebd5f0b5d4e3929114ccd7f89cb499a2fa73d66a7d4fab5fa74e2c85ef685823a5c5fa70094fe72118ed3147ffe1b6de0fe2d82176ed32118a2509948c183b48c30ae66ec5c38cbd2b7e32ef27d87fe598bdcb4588ab1dde0764afe0602ccab985520d8f7075745606a418d0892a32c0c278029bbd9028b2dc9f703c91e63002243ba5ad28e27b170e56a1c89672546770f1007fc36f19ef001a54410c9adbcf7d712742a1b185d6149e26745377bb573f5ea5861382cc8470926d578922897270be5dde943c35600411ef844f813e8b0f35facfe4d66063050b30c91ebe770da1e1ac61f5f9756501909f480addb28595bd9897221b8d6afc3e748d60a75de52af15c724080db7f1193b0ea0ef19347eacbc924e249f7f1086824508b1977d27f63dfe8cd1a431429c2691737fa757b85277ba2d0853ac811c4655d4db83a51ce10f62fb0b476d52b2a5e307fda485b474c667a4c96c3e5ec08d3ed2c4365024ad8b58ce0d8e5e913639227ec769c4a5ca97e7478e84fc45cf977946771bd7031f809f08b678e952f6f78d7c4fc9b164fab574a556ed0cfa84f4079ba120f4f29837cd29cfad7021ce65a6db6eee2ecfbe73df1a89cdf1187b78d45a9b21fe5a0dc342d33439dc00a974a270434add57f79645bf727f38d739575f1bdb25ac16ec1b72e74be0b9602998380184d2a15b2d3acd40485c87dd4d9e83c799bb6179a39df916990bdc61e29c5dec49002b3dc6ce9db8cfc46d0e07ad34e7208895b4c629c99936f32da0fe97f1ea0529d6f9b10392e19b38b3dacf89ff49eb28fd4a3d04ed1e04b9f0900fc677b6e42ada97dd34494ce5a416c9126903cfea0c47e6ff1924d5b8d00a023068246660f358fa5e8e46c82251b0619e17f81400cee209a5ea918ef7d7a44",
-
                                 pubSignals: [
                                 "0x0000000000000000000000000000000000000000000000000000000000000001","0x11a5ec837a18eaa4b083de1c5feea9821a11f3e3353fcae9ffeb11b46214f381","0x0f18eaab146445a9f48132e17f4a8b1eb62eb85e07b7d3cc7848863c59094bfb","0x28db2df574d6cb6d353c02c5b5ae1aa28702d9ccb8eaaa88e4a2c80c52d4368a"]
-
                             },
                             {
                                 proof: "0x0ec2bd42375cc4bbc34f607cb916418b7eff680decfdbbfcb457d104c4c7a1ca0bcc50658430f17426c37de721e998087ae6b927f4926cc8a745a864e502f05123556e574043b775bd0f3ac238f37bc17aa510b58b401a1937cce65bf8f41f0a20dc549d461eac45ad3d85a36923026564c6b043628c9d4c7c85bc6eb23b35471bf4adae768c9618f693d5349d477adda896774cbd35bc697d730563ea199c78045d99a99b8c35f73b5d563bbac8491e53c636ec4f1e9710604236ee0f6d47b22402e4b0e84f5e5dd65e60f7327981d323675c8bbb8019aceb49314deeb89af10a3c8aead4117663c4a69482aff1f6fa944914391f6ae5c5e27225c67a2cdb2c051888a4c3e09a68088a17f4b305d76a3c2fe450a45a3d5ac30b4e260f104efa2a56337b6f614e3aa9117cbf89f726ef5033272d4a1dd15b6e686e278f48de840a747b8686fb9fae6cc5be4b0cbf555ca295e2b3ccd0b2e2a1fa1e381a0df2162f9f2137d43b851bb477a1cda57ef06c574c46032355915d82bb05b44b9d95d917f19c2ef99f073268cdf44762c6407e307b5f1a12efff0710fcf956280dd353209a4b6e5d5fcf5c2a79302277dbd9c9dc0a0b9d8bab44d2c95c201c968bd783269d22e96b23e73906f3abac0f468e683d4be8440625478eb6c5b227eab96d10007c32fc3829640d2d66f0b630893916ca9dc3e3b7f017a06164c85be05844ec2b9dbc75c2a04f29c581a1225c6dd5ed5abd1972272b50a8b48d961389ca6dba246df74d0d5494fe6dae980e0ff79c38428f1dd265bcf0153a1838e9affb68000bd32ef92a4bf03fb930a00e003a77b1c5918efecfd6ffb2d76c508d98a377ac2fd6a51ef9475815afd0100ec5b55a2eddd63a516c94c7c8422c6e95d3d34cef053a7cdf1e380e2217cd5b0e9e65f8c273789b4f1cbb266310f6ab9c620d19e1292912f35ed46dd3337cacce871fff7eddaeda4cf2e25aa1b55a803e165dfd7d0d9596ad788394f97d1ce4106f7bfc132600d3d099387ac6d79e9a2f904d6dd306bfdc0147730416513d6d514e6e1122755a8c9abb670fc7695ee2c94579061811ed71f95bf1d2f93dad1d60701bab2f750eb69920b10332823c871e84cd246c",
@@ -180,14 +218,14 @@
                             }
                         ];
 
-
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
-                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        const openSesame = new ethers.Contract(this.openSesameAddress, openSesameAbi, provider);
                         const playerId = await openSesame.getPlayerId(this.currentAccount);
-                        const proof = zkps[playerId - 1].proof;
-                        const pubSignals = zkps[playerId - 1].pubSignals;
+                        const proof = this.proof || zkps[playerId - 1].proof;
+                        const pubSignals = this.pubSignals || zkps[playerId - 1].pubSignals;
+                        console.log(`verify ZKP using proof: ${proof} and pubSignals: ${pubSignals}`);
                         const result  = await openSesame.verifyProof(proof, pubSignals);
-                        console.log(`Result: ${result}`);
+                        console.log(`verify ZKP Result: ${result}`);
                         console.log(`Sending TX...`);
                         const signer = provider.getSigner();
                         let tx = await openSesame.connect(signer).guruProof(
@@ -198,7 +236,7 @@
                     async register() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
-                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        const openSesame = new ethers.Contract(this.openSesameAddress, openSesameAbi, provider);
                         let tx = await openSesame.connect(signer).registerPlayer();
                         console.log(`Done sending TX... `, tx);
                     },
@@ -206,30 +244,32 @@
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
 
-                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        const openSesame = new ethers.Contract(this.openSesameAddress, openSesameAbi, provider);
                         let tx = await openSesame.connect(signer).claimTreasury(this.currentAccount);
                         console.log(`Done sending TX... `, tx);
+                        this.ethValueLocked = 0;
                     },
                     async claimENS() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
-                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        const openSesame = new ethers.Contract(this.openSesameAddress, openSesameAbi, provider);
                         console.log(`Singer`, signer);
                         console.log(`this.currentAccount`, this.currentAccount);
-                        let tx = await openSesame.connect(signer).claimENS(this.currentAccount, "alice");
+                        let tx = await openSesame.connect(signer).claimENS(this.currentAccount, this.ensToClaim);
                         console.log(`Done sending TX... `, tx);
                     },
                     async withdrawnFromTrust() {
                         const provider = new ethers.providers.Web3Provider(window.ethereum);
                         const signer = provider.getSigner();
-                        const ensTrust = new ethers.Contract(ensTrustAddress, ensTrustAbi, provider);
+                        const ensTrust = new ethers.Contract(this.ensTrustAddress, ensTrustAbi, provider);
                         let tx = await ensTrust.connect(signer)
                         .claimTo(
                             this.currentAccount,
                             ethers.utils.namehash(this.ensToClaim + "." + this.ensDomain),
-                            erc721ForTestingAddress,
-                            tokenIdToDrop,
+                            this.erc721ForTestingAddress,
+                            this.tokenIdToDrop,
                         );
+                        this.doneClaim = true;
                         console.log(`Done sending TX... `, tx);
                     },
                 }
