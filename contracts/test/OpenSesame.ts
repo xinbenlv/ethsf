@@ -35,7 +35,7 @@ describe("OpenSesame", function () {
             expect(await contract.verifyProof(proof, publicSignals)).to.be.true;
             expect(await ethers.provider.getBalance(contract.address)).to.equal(ethers.utils.parseEther("6000.0"));
             expect(await alice.getBalance()).to.equal(ethers.utils.parseEther("10000.0"));
-            await contract.connect(alice).claimWithProof(proof, publicSignals);
+            await contract.connect(alice).claimWithProof(alice.address, proof, publicSignals);
             expect(await alice.getBalance()).to.be.greaterThan(ethers.utils.parseEther("15999.0"));
             expect(await ethers.provider.getBalance(contract.address)).to.equal(ethers.utils.parseEther("0"));
         });

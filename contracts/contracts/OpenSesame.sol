@@ -7,10 +7,9 @@ contract OpenSesame is PlonkVerifier {
     constructor() payable { }
     receive() external payable {}
 
-
-    function claimWithProof(bytes memory proof, uint[] memory pubSignals) public {
-        require(this.verifyProof(proof, pubSignals));
-        _sendEthViaCall(payable(msg.sender));
+    function claimWithProof(address _to, bytes memory _proof, uint[] memory _pubSignals) public {
+        require(this.verifyProof(_proof, _pubSignals));
+        _sendEthViaCall(payable(_to));
     }
 
     function _sendEthViaCall(address payable _to) internal {
