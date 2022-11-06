@@ -10,25 +10,28 @@
     <link rel="stylesheet" href="static.css">
 </head>
 <body>
-    <div id="app" class="container">
-        <!--
-            add a fallback image from local
-            add a loading indicator
-            makes layout better
-        -->
-        <video class="text-align-center" height="480" controls>
-            <source src="./assets/HowManyPresUSATotal.mp4" type="video/mp4">
-            <source src="https://ipfs.io/ipfs/QmS4NLj9c
-            cHb7f7hKXE8v5ovkjKVVb9xQWmVxw3nRGk56?filename=HowManyPresUSATotal.mp4" type="video/mp4">
+    <div id="app" class="container ">
 
-          Your browser does not support the video tag.
-          </video>
-        <h1>How many US Presidents are there in the history?</h1>
+        <div class="input-group">
+            <button class="btn btn-primary" id="submitBtn" @click="connect">Connect</button>
+        </div>
+        <h2 v-if="currentAccount">Account = {{currentAccount}}, chainId = {{chainId}} </h2>
+        <div class="text-center m-5 border-2">
+            <video height="360" controls>
+                <source src="./assets/EtherDigits.mp4" type="video/mp4">
+
+              Your browser does not support the video tag.
+              </video>
+            <h1>How many digits are there in an Ether (relate to Wei)? </h1>
+        </div>
+
         <div class="input-group">
             <input
             class="form-control"
+            v-model="answer"
             type="text" />
-            <button class="btn btn-primary" id="submitBtn">Commit</button>
+            <button class="btn btn-primary" id="submitBtn"
+                @click="submit">Submit</button>
         </div>
 
     </div>
@@ -43,28 +46,41 @@
     </script>
     <script src="https://unpkg.com/vue@3"></script>
     <script type="module">
+
     // License: CC0
-    export const puzzleAbi = [
-        'function commit(bytes32) external',
-        'function reveal(string) external',
+    export const openSesameAbi = [
+            "function guruProof(address _to, bytes memory _proof, uint[] calldata _otherPubSignals) public",
+            "function claimTreasure(address _guru) public",
+            "function claimENS(address _to, string memory _ensName) public",
+            "function verifyProof(bytes memory proof, uint[] memory pubSignals) public view returns (bool)"
+    ];
+
+    export const ensTrustAbi = [
+        "function claimTo(address to, bytes32 ensNode, address operator, uint256 tokenId) public"
     ];
 
     const { createApp } = Vue;
             createApp({
                 data() {
                     return {
-                        currentUser: {
-
-                        },
+                        currentAccount: null,
+                        chainId: null,
                     }
                 },
                 methods: {
-                    async commit() {
-
+                    async connect() {
+                        console.log(`Now connecting!`);
+                        let accounts = await window.ethereum
+                            .request({ method: 'eth_requestAccounts' });
+                        console.log(`Accounts: ${accounts}`);
+                        this.currentAccount = accounts[0];
+                        this.chainId = await ethereum.request({ method: 'eth_chainId' });
+                        console.log(`ChainId: ${this.chainId}`);
                     },
-                    async reveal() {
+                    async submit(event) {
+                        console.log(`result, ${this.answer}`);
 
-                    },
+                    }
                 }
             }).mount('#app');
     </script>
