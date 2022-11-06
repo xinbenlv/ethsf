@@ -4,11 +4,42 @@ import "../circuits/mimcsponge.sol";
 import "hardhat/console.sol";
 
 contract OpenSesame is PlonkVerifier {
-    constructor() payable { }
+    mapping(address=> uint256) playerIds;
+    uint256 playerCount = 0;
+    uint256 playerIdBase = 1;
+
+    constructor() payable {
+    }
     receive() external payable {}
 
-    function claimWithProof(address _to, bytes memory _proof, uint[] memory _pubSignals) public {
-        require(this.verifyProof(_proof, _pubSignals));
+    function registerPlayer() public {
+        playerIds[msg.sender] = (playerCount + playerIdBase);
+        playerCount++;
+    }
+
+    function getPlayerId(address player) public view returns (uint256) {
+        return playerIds[player];
+    }
+
+    function claimWithProof(address _to, bytes memory _proof, uint[] calldata _otherPubSignals) public {
+        uint[] memory pubSignals = new uint[](_otherPubSignals.length + 1);
+
+        console.log("msg.sender = %s", msg.sender);
+        uint playerId = getPlayerId(msg.sender);
+        console.log("playerId = %s", playerId);
+        pubSignals[0] = playerId;
+
+        // TODO optimize for gas
+        for (uint256 i = 0; i < _otherPubSignals.length; i++) {
+            pubSignals[i+1] = _otherPubSignals[i];
+        }
+        console.log("PlayerId = %s", playerId);
+        console.log("pubSignals[0] = %s", pubSignals[0]);
+        console.log("pubSignals[1] = %s", pubSignals[1]);
+        console.log("pubSignals[2] = %s", pubSignals[2]);
+        console.log("pubSignals[3] = %s", pubSignals[3]);
+
+        require(this.verifyProof(_proof, pubSignals), "Proof verification failed");
         _sendEthViaCall(payable(_to));
     }
 
