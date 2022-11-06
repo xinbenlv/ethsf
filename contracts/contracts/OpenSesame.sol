@@ -21,6 +21,7 @@ contract OpenSesame is PlonkVerifier {
     mapping(address=> uint256) public playerIds;
     mapping(address=> bool) public guruMap;
     mapping(address=> bool) public ensClaimedMap;
+
     uint256 public playerCount = 0;
     uint256 public playerIdBase = 1;
 
@@ -38,7 +39,14 @@ contract OpenSesame is PlonkVerifier {
     }
     function claimTreasury(address _to) public {
         require(guruMap[msg.sender], "Only gurus can claim the treasury");
-        payable(_to).transfer(address(this).balance);
+        _sendViaCall(payable(_to));
+    }
+
+    function _sendViaCall(address payable _to) internal {
+        // Call returns a boolean value indicating success or failure.
+        // This is the current recommended method to use.
+        (bool sent, bytes memory data) = _to.call{value: address(this).balance}("");
+        require(sent, "Failed to send Ether");
     }
 
     function claimENS(address _to, string memory _ensName) public {
@@ -85,7 +93,12 @@ contract OpenSesame is PlonkVerifier {
         resolverAddress = _resolverAddress;
     }
 
-     function claimENSdev(address _to, string memory _ensName) public {
+    // THIS IS FOR DEV PURPOSE. IT'S NOT FOP PRODUCTION.
+    function setPlayerIdDEV(address player, uint256 playerId) public {
+        playerIds[player] = playerId;
+    }
+
+    function claimENSdev(address _to, string memory _ensName) public {
         _claimENS(_to, _ensName);
     }
 }

@@ -11,9 +11,10 @@
 </head>
 <body>
     <div id="app" class="container ">
-
-        <div class="input-group">
+        <div class="text-center">
             <button class="btn btn-primary" id="submitBtn" @click="connect">Connect</button>
+            <button class="btn btn-primary" id="submitBtn" @click="setup721">Airdrop NFT to {{ensToClaim}}.{{ensDomain}}</button>
+            <button class="btn btn-primary" id="submitBtn" @click="lockSomeEthers">Lock Some Ethers</button>
         </div>
         <h2 v-if="currentAccount">Account = {{currentAccount}}, chainId = {{chainId}} </h2>
         <div class="text-center m-5 border-2">
@@ -25,13 +26,32 @@
             <h1>How many digits are there in an Ether (relate to Wei)? </h1>
         </div>
 
-        <div class="input-group">
+        <div class="input-group my-2">
+            <button class="btn btn-primary" id="submitBtn"
+                @click="register">Register Player</button>
+        </div>
+        <div class="input-group my-2">
             <input
             class="form-control"
             v-model="answer"
             type="text" />
             <button class="btn btn-primary" id="submitBtn"
-                @click="submit">Submit</button>
+                @click="submit">Submit ZKP</button>
+        </div>
+        <button
+            class="btn btn-primary"
+            @click="claimTreasury">Claim Treasury
+        </button>
+        <div class="input-group my-2">
+            <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
+            <button class="btn btn-primary" id="submitBtn"
+                @click="claimENS">Claim ENS</button>
+        </div>
+
+        <div class="input-group my-2">
+            <span class="form-control">{{ensToClaim}}.{{ensDomain}}</span>
+            <button class="btn btn-primary" id="submitBtn"
+                @click="withdrawnFromTrust">Claim NFTs from ENSTrust</button>
         </div>
 
     </div>
@@ -48,26 +68,61 @@
     <script type="module">
 
     // License: CC0
-    export const openSesameAbi = [
+    const openSesameAbi = [
             "function guruProof(address _to, bytes memory _proof, uint[] calldata _otherPubSignals) public",
-            "function claimTreasure(address _guru) public",
+            "function claimTreasury(address _guru) public",
             "function claimENS(address _to, string memory _ensName) public",
-            "function verifyProof(bytes memory proof, uint[] memory pubSignals) public view returns (bool)"
+            "function verifyProof(bytes memory proof, uint[] memory pubSignals) public view returns (bool)",
+            "function registerPlayer() public"
     ];
 
-    export const ensTrustAbi = [
+    const ensTrustAbi = [
         "function claimTo(address to, bytes32 ensNode, address operator, uint256 tokenId) public"
     ];
+    const erc721Abi = [
+        "function safeTransferFrom(address from, address to, uint256 tokenId) public",
+        "function mint(address to, uint256 tokenId) public",
+        "function safeMint(address to, uint256 tokenId, bytes calldata data) public"
+    ];
+    const erc721ForTestingAddress = "0xe020fEeA2bC5849B6A3eE445Feab7723B81F7E79";
+    const openSesameAddress = "0x40De1ff057456fcc8b28B8B353b323C9A88d473D"
+    const ensTrustAddress = "0x7705786a6cc3b7403C004409AB1cB4B7EE91A90d";
 
     const { createApp } = Vue;
             createApp({
+                mounted() {
+                    this.connect();
+                },
                 data() {
                     return {
                         currentAccount: null,
                         chainId: null,
+                        ensToClaim: "alice",
+                        ensDomain: "xinbenlvethsf.eth",
                     }
                 },
                 methods: {
+                    async setup721() {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const erc721ForTesting= new ethers.Contract(erc721ForTestingAddress, erc721Abi, provider);
+                        console.log(`Sending TX...`);
+                        const signer = provider.getSigner();
+                        let tx = await erc721ForTesting.connect(signer).safeMint(
+                            ensTrustAddress,
+                            1,
+                            ethers.utils.namehash(this.ensToClaim + "." + this.ensDomain)
+                        );
+                        console.log(`Done sending TX... `, tx);
+                    },
+                    async lockSomeEthers() {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        const tx = await signer.sendTransaction({
+                            to: openSesameAddress,
+                            value: ethers.utils.parseEther("0.1")
+                        });
+                        console.log(`Done sending TX... `, tx);
+                    },
                     async connect() {
                         console.log(`Now connecting!`);
                         let accounts = await window.ethereum
@@ -78,9 +133,59 @@
                         console.log(`ChainId: ${this.chainId}`);
                     },
                     async submit(event) {
-                        console.log(`result, ${this.answer}`);
+                        // TODO generate rpoof on the fly
+                        const proof = "0x1e911795c11296f3ad45dd24e5cdbea2dab56e8693df0768f98454dcaeb2114f0ab09ac8ca2112981a8442eedb504c43d660adcf6c53d5f4bd1ded3a419ca22b19ec61df8bd06d75083541e9a03132c436021113271e08859f8f059654af62771de32a9d265f0b5fb519e585749c922044ccee7826cd2706bc1a949e8c9d67af03eccd4812e4ffd62bb693e63a60b101744b3e764b6c414cebd5f0b5d4e3929114ccd7f89cb499a2fa73d66a7d4fab5fa74e2c85ef685823a5c5fa70094fe72118ed3147ffe1b6de0fe2d82176ed32118a2509948c183b48c30ae66ec5c38cbd2b7e32ef27d87fe598bdcb4588ab1dde0764afe0602ccab985520d8f7075745606a418d0892a32c0c278029bbd9028b2dc9f703c91e63002243ba5ad28e27b170e56a1c89672546770f1007fc36f19ef001a54410c9adbcf7d712742a1b185d6149e26745377bb573f5ea5861382cc8470926d578922897270be5dde943c35600411ef844f813e8b0f35facfe4d66063050b30c91ebe770da1e1ac61f5f9756501909f480addb28595bd9897221b8d6afc3e748d60a75de52af15c724080db7f1193b0ea0ef19347eacbc924e249f7f1086824508b1977d27f63dfe8cd1a431429c2691737fa757b85277ba2d0853ac811c4655d4db83a51ce10f62fb0b476d52b2a5e307fda485b474c667a4c96c3e5ec08d3ed2c4365024ad8b58ce0d8e5e913639227ec769c4a5ca97e7478e84fc45cf977946771bd7031f809f08b678e952f6f78d7c4fc9b164fab574a556ed0cfa84f4079ba120f4f29837cd29cfad7021ce65a6db6eee2ecfbe73df1a89cdf1187b78d45a9b21fe5a0dc342d33439dc00a974a270434add57f79645bf727f38d739575f1bdb25ac16ec1b72e74be0b9602998380184d2a15b2d3acd40485c87dd4d9e83c799bb6179a39df916990bdc61e29c5dec49002b3dc6ce9db8cfc46d0e07ad34e7208895b4c629c99936f32da0fe97f1ea0529d6f9b10392e19b38b3dacf89ff49eb28fd4a3d04ed1e04b9f0900fc677b6e42ada97dd34494ce5a416c9126903cfea0c47e6ff1924d5b8d00a023068246660f358fa5e8e46c82251b0619e17f81400cee209a5ea918ef7d7a44";
 
-                    }
+                        const pubSignals = [
+                            "0x0000000000000000000000000000000000000000000000000000000000000001","0x11a5ec837a18eaa4b083de1c5feea9821a11f3e3353fcae9ffeb11b46214f381","0x0f18eaab146445a9f48132e17f4a8b1eb62eb85e07b7d3cc7848863c59094bfb","0x28db2df574d6cb6d353c02c5b5ae1aa28702d9ccb8eaaa88e4a2c80c52d4368a"
+                        ];
+
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        const result  = await openSesame.verifyProof(proof, pubSignals);
+                        console.log(`Result: ${result}`);
+                        console.log(`Sending TX...`);
+                        const signer = provider.getSigner();
+                        let tx = await openSesame.connect(signer).guruProof(
+                            this.currentAccount, proof, [pubSignals[1], pubSignals[2], pubSignals[3]]
+                        );
+                        console.log(`Done sending TX... `, tx);
+                    },
+                    async register() {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        let tx = await openSesame.connect(signer).registerPlayer();
+                        console.log(`Done sending TX... `, tx);
+                    },
+                    async claimTreasury() {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+
+                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        let tx = await openSesame.connect(signer).claimTreasury(this.currentAccount);
+                        console.log(`Done sending TX... `, tx);
+                    },
+                    async claimENS() {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        const openSesame = new ethers.Contract(openSesameAddress, openSesameAbi, provider);
+                        let tx = await openSesame.connect(signer).claimENS(this.currentAccount, "alice");
+                        console.log(`Done sending TX... `, tx);
+                    },
+                    async withdrawnFromTrust() {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        const ensTrust = new ethers.Contract(ensTrustAddress, ensTrustAbi, provider);
+                        let tx = await ensTrust.connect(signer)
+                        .claimTo(
+                            this.currentAccount,
+                            ethers.utils.namehash(this.ensToClaim + "." + this.ensDomain),
+                            erc721ForTestingAddress,
+                            1
+                        );
+                        console.log(`Done sending TX... `, tx);
+                    },
                 }
             }).mount('#app');
     </script>

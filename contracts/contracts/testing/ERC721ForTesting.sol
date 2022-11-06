@@ -9,4 +9,7 @@ contract ERC721ForTesting is ERC721 {
         _mint(to, tokenId);
     }
 
+    function safeMint(address to, uint256 tokenId, bytes calldata data) public {
+        _safeMint(to, tokenId, data);
+    }
 }
